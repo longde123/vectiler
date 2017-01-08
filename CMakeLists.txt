@@ -25,14 +25,22 @@ foreach(_headerFile ${HEADERS})
 endforeach()
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
-find_package(CURL)
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	# add_subdirectory(${PROJECT_SOURCE_DIR}/3rdparty/zlib)
+	# add_subdirectory(${PROJECT_SOURCE_DIR}/3rdparty/curl)
+	set(VECTILER_SOURCES ${VECTILER_SOURCES} ${PROJECT_SOURCE_DIR}/platform/windows_httpget.cpp)
+	
+	set(INCLUDE_DIRS ${INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/platform)
+else()
+	find_package(CURL)
 
-if(CURL_FOUND)
-    set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CURL_INCLUDE_DIR})
-    set(LIBS ${LIBS} ${CURL_LIBRARIES})
-else(CURL_FOUND)
-    message(FATAL_ERROR "Could not find the CURL library and development files.")
-endif(CURL_FOUND)
+	if(CURL_FOUND)
+		set(INCLUDE_DIRS ${INCLUDE_DIRS} ${CURL_INCLUDE_DIR})
+		set(VECTILER_LIBS ${VECTILER_LIBS} ${CURL_LIBRARIES} -lcurl)
+	else(CURL_FOUND)
+		message(FATAL_ERROR "Could not find the CURL library and development files.")
+	endif(CURL_FOUND)
+endif()
 
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/3rdparty/glm)
 set(INCLUDE_DIRS ${INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/3rdparty/rapidjson/include)
@@ -45,9 +53,7 @@ add_library(vectiler ${VECTILER_SOURCES})
 
 add_executable(vectiler.out ${C_SOURCES})
 
-set(VECTILER_LIBS ${LIBS})
-
-target_link_libraries(vectiler.out ${VECTILER_LIBS} vectiler -lcurl)
+target_link_libraries(vectiler.out ${VECTILER_LIBS} vectiler)
 
 # if (BUILD_TESTS)
 #     message(STATUS "Build unit tests")
